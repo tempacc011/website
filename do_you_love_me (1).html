@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Do you love me?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Quicksand:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Quicksand', 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #ffe0ec 0%, #ffd1dc 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 50px 40px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    text-align: center;
+    width: 90%;
+    max-width: 560px;
+    position: relative;
+    z-index: 2;
+  }
+
+  h1 {
+    font-family: 'Dancing Script', cursive;
+    font-size: 46px;
+    font-weight: 700;
+    color: #d6336c;
+    margin-bottom: 40px;
+  }
+
+  .stage {
+    position: relative;
+    width: 100%;
+    height: 160px;
+  }
+
+  button {
+    position: absolute;
+    padding: 12px 32px;
+    font-size: 17px;
+    border-radius: 30px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: opacity 0.2s ease;
+  }
+
+  #yesBtn {
+    left: 50%;
+    top: 50%;
+    transform: translate(-150%, -50%);
+    background: #d6336c;
+    color: white;
+  }
+
+  #yesBtn:hover {
+    background: #c2255c;
+  }
+
+  #noBtn {
+    left: 50%;
+    top: 50%;
+    transform: translate(50%, -50%);
+    background: #ced4da;
+    color: #2b2d31;
+  }
+
+  #caption {
+    margin-top: 30px;
+    font-size: 15px;
+    color: #868e96;
+  }
+
+  .hearts-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 1;
+  }
+
+  .heart {
+    position: absolute;
+    top: -10%;
+    font-size: 24px;
+    color: #d6336c;
+    animation: fall linear forwards;
+  }
+
+  @keyframes fall {
+    to {
+      transform: translateY(110vh) rotate(360deg);
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="hearts-container" id="heartsContainer"></div>
+
+<div class="card">
+  <h1 id="question">🌸 Do you love me?</h1>
+  <div class="stage" id="stage">
+    <button id="yesBtn">yes</button>
+    <button id="noBtn">no</button>
+  </div>
+  <p id="caption">Try clicking no, I dare you</p>
+</div>
+
+<script>
+  const stage = document.getElementById('stage');
+  const noBtn = document.getElementById('noBtn');
+  const yesBtn = document.getElementById('yesBtn');
+  const caption = document.getElementById('caption');
+  const question = document.getElementById('question');
+
+  let dodgeCount = 0;
+  const DANGER_RADIUS = 80; // px - how close the cursor can get before the button flees
+
+  const captions = [
+    "Nice try",
+    "Not so fast",
+    "Almost had it",
+    "Nope",
+    "Keep trying",
+    "So close",
+    "You can't catch me",
+    "Give up yet?"
+  ];
+
+  function moveNoButton() {
+    const stageRect = stage.getBoundingClientRect();
+    const btnRect = noBtn.getBoundingClientRect();
+
+    const maxX = stageRect.width - btnRect.width;
+    const maxY = stageRect.height - btnRect.height;
+
+    const newX = Math.random() * maxX;
+    const newY = Math.random() * maxY;
+
+    noBtn.style.left = newX + 'px';
+    noBtn.style.top = newY + 'px';
+    noBtn.style.transform = 'none';
+
+    dodgeCount++;
+    caption.textContent = captions[Math.min(dodgeCount - 1, captions.length - 1)];
+  }
+
+  // Only move the button when the cursor gets within DANGER_RADIUS of it.
+  // We compute distance on every mousemove instead of relying on mouseenter,
+  // so moving the mouse elsewhere on the page does nothing.
+  stage.addEventListener('mousemove', function (e) {
+    const stageRect = stage.getBoundingClientRect();
+    const btnRect = noBtn.getBoundingClientRect();
+
+    const cursorX = e.clientX - stageRect.left;
+    const cursorY = e.clientY - stageRect.top;
+    const btnCenterX = (btnRect.left - stageRect.left) + btnRect.width / 2;
+    const btnCenterY = (btnRect.top - stageRect.top) + btnRect.height / 2;
+
+    const dist = Math.hypot(cursorX - btnCenterX, cursorY - btnCenterY);
+    if (dist < DANGER_RADIUS) {
+      moveNoButton();
+    }
+  });
+
+  // mobile fallback: tapping the button also makes it flee
+  noBtn.addEventListener('touchstart', function (e) {
+    e.preventDefault();
+    moveNoButton();
+  });
+
+  yesBtn.addEventListener('click', function () {
+    question.textContent = 'I knew it <3';
+    caption.textContent = 'Best decision ever';
+    noBtn.style.display = 'none';
+    yesBtn.style.transition = 'transform 0.3s';
+    yesBtn.style.transform = 'translate(-50%, -50%)';
+    startHeartRain();
+  });
+
+  const heartsContainer = document.getElementById('heartsContainer');
+  const heartChars = ['❤', '💕', '💖', '💗', '♥'];
+
+  function startHeartRain() {
+    const totalHearts = 80;
+    for (let i = 0; i < totalHearts; i++) {
+      setTimeout(createHeart, i * 80);
+    }
+  }
+
+  function createHeart() {
+    const heart = document.createElement('div');
+    heart.className = 'heart';
+    heart.textContent = heartChars[Math.floor(Math.random() * heartChars.length)];
+
+    const startX = Math.random() * 100;
+    const duration = 3 + Math.random() * 3;
+    const size = 16 + Math.random() * 22;
+
+    heart.style.left = startX + 'vw';
+    heart.style.fontSize = size + 'px';
+    heart.style.animationDuration = duration + 's';
+
+    heartsContainer.appendChild(heart);
+
+    setTimeout(function () {
+      heart.remove();
+    }, duration * 1000);
+  }
+</script>
+
+</body>
+</html>
